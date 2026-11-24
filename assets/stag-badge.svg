@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="65%"><stop offset="0" stop-color="#7a1d3f"/><stop offset="1" stop-color="#2a0b19"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe28a"/><stop offset="1" stop-color="#c9922e"/></linearGradient>
+    <linearGradient id="saus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e98a55"/><stop offset="1" stop-color="#a9461f"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="192" height="192" rx="40" fill="url(#bg)"/>
+  <rect x="12" y="12" width="176" height="176" rx="33" fill="none" stroke="url(#gold)" stroke-width="5"/>
+  <g fill="none" stroke="#c98a4b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78 92 C 60 70, 52 52, 56 30"/><path d="M64 62 C 48 60, 38 52, 34 40"/><path d="M58 44 C 46 38, 44 28, 46 20"/>
+    <path d="M122 92 C 140 70, 148 52, 144 30"/><path d="M136 62 C 152 60, 162 52, 166 40"/><path d="M142 44 C 154 38, 156 28, 154 20"/>
+  </g>
+  <g fill="none" stroke="#f0c48a" stroke-width="3" stroke-linecap="round">
+    <path d="M76 88 C 60 68, 54 52, 57 34"/><path d="M124 88 C 140 68, 146 52, 143 34"/>
+  </g>
+  <path d="M70 98 Q100 80 130 98" fill="none" stroke="#3b1e10" stroke-width="7" stroke-linecap="round"/>
+  <g transform="rotate(-18 100 130)">
+    <rect x="44" y="114" width="112" height="34" rx="17" fill="url(#saus)" stroke="#4a1c0a" stroke-width="5"/>
+    <path d="M60 122 H138" stroke="#ffd0a8" stroke-width="5" stroke-linecap="round" opacity=".85"/>
+    <path d="M78 140 l6 -8 M98 140 l6 -8 M118 140 l6 -8" stroke="#6b2a10" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="100" y="180" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="20" fill="url(#gold)" letter-spacing="3">STAG</text>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "_comment": "SAMPLE invite. The groom, host, date, time and venue below are placeholders for a demo, not a real event.",
+  "sample": true,
+  "hostName": "The Best Man",
+  "groomName": "Dave",
+  "landingLine": "The Best Man is sending you an invite. Pass the level to find out what it is!",
+  "landingSubline": "Fair warning: this level fights back.",
+  "howToPlay": [
+    "Left thumb moves Dave. Drag your right thumb to aim, and hold it down to keep throwing sausages. On a computer, use WASD to move and the mouse to aim and click.",
+    "Escorts pour out of the hotel rooms and try to catch the groom. It takes a few sausage hits to shoo each one away. The purple ones grab on and drain your health, so hit them fast.",
+    "Beers on the floor top up your health. A blue pill makes your sausages SUPER firm for exactly 5 seconds, shown by the countdown ring. They come out bigger, stiffer and glowing, do triple damage and go straight through.",
+    "You carry 10 sausages before you reload. Reach the elevator at the end of Floor 7, but the Diva guards it. Shoo her to open the doors."
+  ],
+  "eventName": "Dave's Stag Weekend",
+  "date": "Saturday, March 20, 2027 (sample)",
+  "time": "7:00 PM till late (sample)",
+  "location": "The Grand Hotel, Floor 7, Toronto (sample venue)",
+  "extraNote": "Dress code: antlers encouraged. What happens on Floor 7 stays on Floor 7.",
+  "rsvpEndpoint": "local",
+  "rsvpStorageKey": "playfair-stag-sample-rsvp",
+  "madeBy": "Playfair Fun & Games",
+  "tagline": "You're Invited to Play",
+  "failsBeforeAssist": 3,
+  "privacyNote": "No ads. No tracking. The only information collected is what you type in the RSVP, if you choose to send it."
+}

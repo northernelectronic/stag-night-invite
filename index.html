@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="You're Invited" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#4a1026" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>You're Invited</title>
+  <link rel="icon" type="image/png" href="./icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="screen-loading" class="screen card-screen" data-screen="loading">
+      <div class="card landing-card">
+        <p class="kicker">Playfair Fun &amp; Games</p>
+        <h1>Checking you in…</h1>
+        <div class="load-bar" aria-hidden="true"><i id="load-bar" style="width:40%"></i></div>
+      </div>
+    </section>
+
+    <section id="screen-landing" class="screen card-screen" data-screen="landing" hidden>
+      <div class="card landing-card">
+        <p class="sample-badge" id="sample-badge" hidden>Sample invite</p>
+        <img class="crest" src="./assets/stag-badge.svg" alt="" width="160" height="160" />
+        <p class="kicker" id="landing-kicker">You're Invited to Play</p>
+        <h1 id="landing-line">The Best Man is sending you an invite. Pass the level to find out what it is!</h1>
+        <p class="subline" id="landing-subline">Fair warning: this level fights back.</p>
+        <button type="button" class="btn primary" id="btn-begin">Open the game</button>
+        <p class="trust">No ads. No tracking. Play the short level to open the invite.</p>
+      </div>
+      <footer class="madeby"></footer>
+    </section>
+
+    <section id="screen-howto" class="screen card-screen" data-screen="howto" hidden>
+      <div class="card">
+        <h1>How to play</h1>
+        <div class="controls-icon" aria-hidden="true">
+          <svg viewBox="0 0 200 90" width="200" height="90">
+            <rect x="20" y="10" width="160" height="70" rx="16" fill="#1c1a17" stroke="#f6f1e8" stroke-width="3"/>
+            <circle cx="62" cy="45" r="20" fill="none" stroke="#e3b341" stroke-width="3"/>
+            <circle cx="68" cy="40" r="9" fill="#e3b341"/>
+            <circle cx="138" cy="45" r="20" fill="none" stroke="#ff5d8f" stroke-width="3"/>
+            <circle cx="146" cy="38" r="9" fill="#ff5d8f"/>
+            <text x="62" y="76" fill="#f6f1e8" font-size="9" font-weight="700" text-anchor="middle" font-family="sans-serif">MOVE</text>
+            <text x="138" y="76" fill="#f6f1e8" font-size="9" font-weight="700" text-anchor="middle" font-family="sans-serif">AIM + THROW</text>
+          </svg>
+        </div>
+        <ol class="howto-lines" id="howto-lines"></ol>
+        <button type="button" class="btn primary" id="btn-start">Start the level</button>
+      </div>
+      <footer class="madeby"></footer>
+    </section>
+
+    <section id="screen-game" class="screen game-screen" data-screen="game" hidden>
+      <div id="hud">
+        <div class="hud-pill" id="hud-obj">Floor 7: find the elevator</div>
+        <button type="button" class="hud-quiet" id="btn-mute" aria-label="Mute or unmute sound">Sound on</button>
+      </div>
+      <canvas id="stage" aria-label="Hotel hallway level: throw sausages at the escorts chasing the groom and reach the elevator"></canvas>
+      <div id="assist-bar" class="assist-bar" hidden>
+        <p id="assist-copy">Easy mode is on. Or skip straight to the invite.</p>
+        <button type="button" class="btn secondary" id="btn-skip">Skip to the invite</button>
+      </div>
+    </section>
+
+    <section id="screen-reveal" class="screen card-screen" data-screen="reveal" hidden>
+      <div class="card invite-card">
+        <p class="sample-badge" id="sample-badge-2" hidden>Sample invite</p>
+        <img class="crest large" src="./assets/stag-badge.svg" alt="Stag badge" width="200" height="200" />
+        <p class="kicker">You made the elevator. Here is the invite.</p>
+        <h1 id="event-name">Dave's Stag Weekend</h1>
+        <dl class="details">
+          <div><dt>Date</dt><dd id="field-date"></dd></div>
+          <div><dt>Time</dt><dd id="field-time"></dd></div>
+          <div><dt>Where</dt><dd id="field-location"></dd></div>
+          <div><dt>Host</dt><dd id="field-host"></dd></div>
+        </dl>
+        <aside id="extra-note" class="extra-note">
+          <img src="./assets/stag-badge.svg" alt="" width="34" height="34" />
+          <p id="extra-note-text"></p>
+        </aside>
+        <form id="rsvp-form" class="rsvp-form" action="#" method="post">
+          <h2>Are you in?</h2>
+          <label>
+            <span>Your name</span>
+            <input id="rsvp-name" name="guestName" type="text" required autocomplete="name" placeholder="Your name" />
+          </label>
+          <label>
+            <span>Can you make it?</span>
+            <select id="rsvp-attending" name="attending">
+              <option value="yes">Count me in</option>
+              <option value="maybe">Maybe, will confirm</option>
+              <option value="no">Can't make it</option>
+            </select>
+          </label>
+          <label class="rsvp-check">
+            <input id="rsvp-stay" name="stayingOver" type="checkbox" />
+            <span>I'll need a hotel room</span>
+          </label>
+          <label>
+            <span>Message for the groom</span>
+            <input id="rsvp-message" name="message" type="text" autocomplete="off" placeholder="Optional" />
+          </label>
+          <button type="submit" class="btn primary" id="rsvp-submit">Send RSVP</button>
+          <p class="rsvp-error" id="rsvp-error" hidden></p>
+        </form>
+        <div id="rsvp-thanks" class="rsvp-thanks" hidden>
+          <p class="thanks-lead" id="rsvp-thanks-lead">Thank you!</p>
+          <p id="rsvp-thanks-body">Your RSVP is in.</p>
+        </div>
+        <button type="button" class="btn secondary replay" id="btn-replay">Play the level again</button>
+        <p class="trust" id="privacy-note">No ads. No tracking.</p>
+      </div>
+      <footer class="madeby"></footer>
+    </section>
+  </div>
+  <div id="wipe" aria-hidden="true"></div>
+  <script src="./game.js"></script>
+</body>
+</html>
