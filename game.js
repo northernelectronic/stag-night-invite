@@ -68,9 +68,9 @@
   const ESC_LINES = [["esc_sweetie", "Hey sweetie!"], ["esc_company", "Looking for company?"], ["esc_date", "Need a date, sugar?"], ["esc_handsome", "Where you goin', handsome?"], ["esc_mama", "Come give mama a hug!"], ["esc_shy", "Don't be shy, honey!"]];
   const SHOO_LINES = [["shoo_hmph", "Hmph!"], ["shoo_rude", "Rude!"], ["shoo_rude2", "Well! Rude!"], ["shoo_hmph2", "Hmph! Fine!"]];
   const DAVE_THROW = [["dave_lika", "You lika da sausage, eh?!"], ["dave_that", "Take that-a! That-a! That-a!"], ["dave_mamma", "Mamma mia, here comes da sausage!"]];
-  const DAVE_FIRM = ["dave_firm", "Extra firm, baby!"], DAVE_BEER = ["dave_hydra", "Ahh, hydration!"];
-  const VOICE_NAMES = [...ESC_LINES, ...SHOO_LINES, ...DAVE_THROW, DAVE_FIRM, DAVE_BEER].map((l) => l[0]);
-  const vraw = {}, vbuf = {}, vch = { esc: null, dave: null };
+  const DAVE_FIRM = ["dave_firm", "Extra firm, baby!"];
+  const VOICE_NAMES = [...ESC_LINES, ...SHOO_LINES, ...DAVE_THROW, DAVE_FIRM].map((l) => l[0]);
+  const vraw = {}, vbuf = {};
   const vcd = { esc: 2.5, shoo: 0, dave: 2.0, lastEsc: "", lastDave: "" };
   VOICE_NAMES.forEach((n) => { vraw[n] = fetch("./audio/" + n + ".mp3").then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null); });
   let voicesDecoding = false;
@@ -78,40 +78,47 @@
     if (voicesDecoding || !actx) return; voicesDecoding = true;
     VOICE_NAMES.forEach((n) => vraw[n].then((ab) => { if (!ab) return; try { const pr = actx.decodeAudioData(ab, (b) => (vbuf[n] = b), () => {}); if (pr && pr.then) pr.then((b) => (vbuf[n] = b)).catch(() => {}); } catch (e) {} }));
   }
-  function playVoice(ch, name, rate, vol, force) {
-    if (!actx || muted || !vbuf[name]) return false;
-    const cur = vch[ch];
-    if (cur && actx.currentTime < cur.end) { if (!force || (force === 2 && cur.pri === 2)) return false; try { cur.src.stop(); } catch (e) {} }
+  // One voice at a time: nothing ever cuts off a line. Escort lines are skipped while busy;
+  // Dave's blue-pill line ("Extra firm, baby!") always plays: if busy it waits in a
+  // priority slot and plays the moment the current line ends; nothing else starts meanwhile.
+  let vBusyUntil = 0, vQueue = null;
+  const voiceBusy = () => !actx || actx.currentTime < vBusyUntil;
+  function playVoice(name, rate, vol) {
+    if (!actx || muted || !vbuf[name] || voiceBusy()) return false;
     const src = actx.createBufferSource(), g = actx.createGain();
     src.buffer = vbuf[name]; src.playbackRate.value = rate || 1; g.gain.value = vol || 1.4;
     src.connect(g); g.connect(master); src.start();
-    vch[ch] = { src, pri: force === 2 ? 2 : 1, end: actx.currentTime + vbuf[name].duration / (rate || 1) };
-    window.__voiceLog = (window.__voiceLog || []).concat(name);
+    vBusyUntil = actx.currentTime + vbuf[name].duration / (rate || 1) + 0.25;
+    window.__voiceLog = (window.__voiceLog || []).concat(name); (window.__voiceT = window.__voiceT || []).push([name, +actx.currentTime.toFixed(2), +(vBusyUntil - 0.25).toFixed(2)]);
     return true;
   }
   const pickLine = (arr, last) => { let l; for (let i = 0; i < 4; i++) { l = arr[(Math.random() * arr.length) | 0]; if (l[0] !== last) break; } return l; };
   function escVoiceRate(e) { if (!e.vp) e.vp = e.type === "diva" ? 0.88 : e.type === "skater" ? rand(1.06, 1.14) : rand(0.94, 1.06); return e.vp; }
   function voiceTick(dt) {
     vcd.esc -= dt; vcd.shoo -= dt; vcd.dave -= dt;
-    const s = state; if (!s || s.phase !== "play" || vcd.esc > 0) return;
+    const s = state; if (!s || s.phase !== "play") { vQueue = null; return; }
+    if (vQueue) { if (!voiceBusy()) { const q = vQueue; vQueue = null; sayDave(q.line, 1.6); return; } }
+    if (vcd.esc > 0 || voiceBusy()) return;
     let best = null, bd = 1e9;
     s.escorts.forEach((e) => { if (e.state !== "chase") return; const d = Math.hypot(e.x - s.p.x, e.y - s.p.y); if (d < bd) { bd = d; best = e; } });
     if (!best || bd > 8 * T || bd < 1.2 * T) return;
     const l = pickLine(ESC_LINES, vcd.lastEsc);
-    if (playVoice("esc", l[0], escVoiceRate(best), 1.3)) { vcd.lastEsc = l[0]; best.say = l[1]; best.sayT = 1.8; vcd.esc = rand(3.5, 6); }
+    if (playVoice(l[0], escVoiceRate(best), 1.3)) { vcd.lastEsc = l[0]; best.say = l[1]; best.sayT = 1.8; vcd.esc = rand(3.5, 6); }
     else vcd.esc = 0.5;
   }
   function voiceShoo(e) {
-    if (vcd.shoo > 0 || Math.random() > 0.6) return;
+    if (vQueue || vcd.shoo > 0 || Math.random() > 0.6) return;
     const l = pickLine(SHOO_LINES, "");
-    if (playVoice("esc", l[0], escVoiceRate(e), 1.2, true)) { e.say = l[1]; e.sayT = 1.2; vcd.shoo = 1.6; vcd.esc = Math.max(vcd.esc, 1.5); }
+    if (playVoice(l[0], escVoiceRate(e), 1.2)) { e.say = l[1]; e.sayT = 1.2; vcd.shoo = 1.6; vcd.esc = Math.max(vcd.esc, 1.5); }
   }
   function voiceDaveThrow(sup) {
     if (vcd.dave > 0 || Math.random() > 0.45) return;
     const l = pickLine(DAVE_THROW, vcd.lastDave);
-    if (playVoice("dave", l[0], 1, 1.5)) { vcd.lastDave = l[0]; vcd.dave = rand(5, 8); state.daveSay = l[1]; state.daveSayT = 1.9; }
+    if (vQueue) return;
+    if (sayDave(l, 1.5)) { vcd.lastDave = l[0]; vcd.dave = rand(5, 8); }
   }
-  function voiceDave(line) { if (playVoice("dave", line[0], 1, 1.6, 2)) { vcd.dave = 4; state.daveSay = line[1]; state.daveSayT = 1.8; } }
+  function sayDave(line, vol) { if (playVoice(line[0], 1, vol)) { state.daveSay = line[1]; state.daveSayT = Math.max(1.8, vbuf[line[0]].duration + 0.4); return true; } return false; }
+  function voiceDave(line) { if (!sayDave(line, 1.6)) { if (actx && !muted && vbuf[line[0]]) vQueue = { line }; } else vcd.dave = Math.max(vcd.dave, 4); }
 
   const sfx = {
     tap: () => tone(660, 0.08, "triangle", 0.15, 880),
@@ -636,7 +643,7 @@
       if (Math.hypot(k.x - p.x, k.y - p.y) < 30) {
         s.pickups.splice(i, 1);
         if (k.type === "beer") {
-          p.hp = Math.min(100, p.hp + 35); p.beers++; sfx.beer(); voiceDave(DAVE_BEER);
+          p.hp = Math.min(100, p.hp + 35); p.beers++; sfx.beer();
           pop(p.x, p.y - 64, "GLUG GLUG", "#ffe28a", 15, 0.7); setTimeout(() => state && pop(state.p.x, state.p.y - 70, "BURP!", "#fff", 24, 1), 600);
           burst(p.x, p.y - 30, "foam", 10, ["#fffbe8", "#ffe7a3"], 120);
         } else {
