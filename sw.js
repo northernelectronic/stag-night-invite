@@ -1,5 +1,5 @@
 /* Local offline cache only. No analytics, no third-party requests. Network-first so updates show. */
-const CACHE = "stag-night-invite-v4";
+const CACHE = "stag-night-invite-v5";
 const ASSETS = ["./", "./index.html", "./styles.css", "./game.js", "./config.json", "./manifest.webmanifest",
   "./assets/stag-badge.svg", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/favicon.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())); });

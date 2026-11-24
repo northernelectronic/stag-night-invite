@@ -1716,6 +1716,95 @@
     rg.addColorStop(0, "rgba(" + r + "," + g2 + "," + b + ",0.9)"); rg.addColorStop(0.35, "rgba(" + r + "," + g2 + "," + b + ",0.35)"); rg.addColorStop(1, "rgba(" + r + "," + g2 + "," + b + ",0)");
     g.fillStyle = rg; g.fillRect(0, 0, 64, 64); return c;
   }
+
+  /* ---- elevator (v3: recessed, unmistakable) ---- */
+  const EDY = 1.38; // door plane (tiles) inside the ELEV row: recess depth 0.62 tile
+  const elevDoorCache = {}, callCache = {};
+  function brassGrad(g, x0, x1, a, b) { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, a || "#8a6a2a"); gr.addColorStop(0.3, b || "#f6dc8c"); gr.addColorStop(0.55, "#c9a24a"); gr.addColorStop(0.8, "#fff0b8"); gr.addColorStop(1, a || "#7a5a20"); return gr; }
+  function texElevDoor(open, unlocked) {
+    const key = Math.round(open * 12) + (unlocked ? 100 : 0);
+    if (elevDoorCache[key]) return elevDoorCache[key];
+    const o = Math.round(open * 12) / 12, lamp = unlocked ? "#46ff7a" : "#ff3344";
+    const ox = 12, ow = 104, oy = 40, oh = 88, half = (ow / 2) * (1 - o * 0.97);
+    return (elevDoorCache[key] = makeTex(TEX, TEX, (g, w, h) => {
+      g.fillStyle = "#1e1416"; g.fillRect(0, 0, w, h);
+      // marble surround
+      for (let i = 0; i < 40; i++) { g.strokeStyle = "rgba(255,240,220,.07)"; g.lineWidth = 1; g.beginPath(); g.moveTo(Math.random() * w, Math.random() * h); g.quadraticCurveTo(Math.random() * w, Math.random() * h, Math.random() * w, Math.random() * h); g.stroke(); }
+      // header plate
+      g.fillStyle = brassGrad(g, 0, w); g.fillRect(4, 2, w - 8, 34); g.fillStyle = "#1a0e08"; g.fillRect(6, 4, w - 12, 30);
+      g.fillStyle = "#9fffc0"; g.font = "bold 11px 'Avenir Next', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ELEVATOR", 52, 11);
+      g.fillStyle = "#000"; g.fillRect(36, 18, 34, 14); g.fillStyle = "#ff9a3d"; g.font = "bold 12px monospace"; g.fillText("\u25BC 7", 53, 25.5);
+      g.fillStyle = "#000"; g.beginPath(); g.arc(104, 22, 9, 0, 7); g.fill(); g.fillStyle = lamp; g.beginPath(); g.arc(104, 22, 6.5, 0, 7); g.fill();
+      g.fillStyle = "rgba(255,255,255,.7)"; g.beginPath(); g.arc(102, 20, 2, 0, 7); g.fill();
+      // frame
+      g.fillStyle = brassGrad(g, ox - 6, ox + ow + 6); g.fillRect(ox - 6, oy - 4, ow + 12, oh + 4);
+      g.fillStyle = "#3a2810"; g.fillRect(ox - 1, oy - 1, ow + 2, oh + 1);
+      // interior
+      const ig = g.createLinearGradient(0, oy, 0, oy + oh); ig.addColorStop(0, "#fff8dc"); ig.addColorStop(0.6, "#ffd889"); ig.addColorStop(1, "#c88a3a");
+      g.fillStyle = ig; g.fillRect(ox, oy, ow, oh); g.fillStyle = "rgba(160,110,40,.6)"; g.fillRect(ox, oy + 50, ow, 4); g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(ox + 30, oy + 6, ow - 60, 36);
+      // leaves
+      const leaf = (x0, x1) => {
+        const lg = g.createLinearGradient(x0, 0, x1, 0); lg.addColorStop(0, "#9a7a3a"); lg.addColorStop(0.25, "#f8e3a0"); lg.addColorStop(0.5, "#cfa955"); lg.addColorStop(0.85, "#fff4c8"); lg.addColorStop(1, "#8a6a2a");
+        g.fillStyle = lg; g.fillRect(x0, oy, x1 - x0, oh);
+        g.fillStyle = "rgba(90,60,20,.16)"; for (let x = x0; x < x1; x += 2) g.fillRect(x, oy, 1, oh);
+        g.save(); g.beginPath(); g.rect(x0, oy, x1 - x0, oh); g.clip(); g.fillStyle = "rgba(255,255,255,.38)"; g.beginPath(); g.moveTo(x0 + 4, oy + oh); g.lineTo(x0 + 18, oy + oh); g.lineTo(x0 + 44, oy); g.lineTo(x0 + 30, oy); g.closePath(); g.fill();
+        g.fillStyle = "rgba(255,255,255,.18)"; g.beginPath(); g.moveTo(x0 + 22, oy + oh); g.lineTo(x0 + 26, oy + oh); g.lineTo(x0 + 52, oy); g.lineTo(x0 + 48, oy); g.closePath(); g.fill(); g.restore();
+        g.fillStyle = "rgba(60,40,10,.45)"; g.fillRect(x0, oy + oh - 12, x1 - x0, 12); g.fillStyle = "rgba(255,240,200,.3)"; g.fillRect(x0, oy + oh - 12, x1 - x0, 1);
+      };
+      leaf(ox, ox + half); leaf(ox + ow - half, ox + ow);
+      g.fillStyle = "#1a0e04"; g.fillRect(ox + half - 1.5, oy, 1.5, oh); g.fillRect(ox + ow - half, oy, 1.5, oh);
+      if (o < 0.05) { g.fillStyle = "#0e0802"; g.fillRect(63, oy, 2, oh); g.fillStyle = "rgba(255,250,220,.6)"; g.fillRect(65, oy, 1, oh); }
+      g.fillStyle = "#2a1a08"; g.fillRect(ox - 6, h - 3, ow + 12, 3);
+    }, (g, w, h) => {
+      g.fillStyle = "#fff"; g.font = "bold 11px 'Avenir Next', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ELEVATOR", 52, 11);
+      g.fillRect(37, 19, 32, 12); g.beginPath(); g.arc(104, 22, 6.5, 0, 7); g.fill();
+      if (o > 0.04) g.fillRect(ox + half, oy, ow - half * 2, oh);
+    }));
+  }
+  function texJamb() {
+    return makeTex(TEX, TEX, (g, w, h) => {
+      g.fillStyle = brassGrad(g, 0, w, "#6a5020", "#e8c878"); g.fillRect(0, 0, w, h);
+      g.fillStyle = "rgba(60,40,10,.18)"; for (let x = 0; x < w; x += 3) g.fillRect(x, 0, 1, h);
+      g.fillStyle = "#1e1416"; g.fillRect(0, 0, w, 36); g.fillStyle = "#c9a24a"; g.fillRect(0, 34, w, 3);
+      g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(0, h - 10, w, 10);
+    });
+  }
+  function texElevSign() {
+    return makeTex(TEX, TEX, (g, w, h) => {
+      wpBase(g, w, h);
+      g.fillStyle = "#c9a24a"; rr(g, 12, 16, 104, 34, 6); g.fill(); g.fillStyle = "#0c2a18"; rr(g, 15, 19, 98, 28, 4); g.fill();
+      g.fillStyle = "#8dffb4"; g.font = "bold 13px 'Avenir Next', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ELEVATOR \u2192", 64, 33.5);
+      g.fillStyle = "#b08a58"; rr(g, 34, 56, 60, 14, 3); g.fill(); g.fillStyle = "#2a1a0c"; g.font = "bold 8px sans-serif"; g.fillText("FLOOR 7  \u25BC LOBBY", 64, 63.5);
+      noiseFx(g, w, h, 6);
+    }, (g) => { g.fillStyle = "#fff"; g.font = "bold 13px 'Avenir Next', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ELEVATOR \u2192", 64, 33.5); });
+  }
+  function texCallPanel(unlocked) {
+    if (callCache[+unlocked]) return callCache[+unlocked];
+    return (callCache[+unlocked] = makeTex(TEX, TEX, (g, w, h) => {
+      wpBase(g, w, h);
+      g.fillStyle = brassGrad(g, 30, 58); rr(g, 30, 22, 28, 54, 5); g.fill(); g.strokeStyle = "#3a2810"; g.lineWidth = 1.5; g.stroke();
+      g.fillStyle = "#000"; g.beginPath(); g.arc(44, 30, 5.5, 0, 7); g.fill(); g.fillStyle = unlocked ? "#46ff7a" : "#ff3344"; g.beginPath(); g.arc(44, 30, 4, 0, 7); g.fill();
+      [[44, 46, "\u25B2", "#5a4a30"], [44, 62, "\u25BC", "#ffcf5a"]].forEach(([x, y, t, col]) => { g.fillStyle = "#2a1a0c"; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(x, y, 5.5, 0, 7); g.fill(); g.fillStyle = "#2a1a0c"; g.font = "bold 7px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(t, x, y + 0.5); });
+      g.fillStyle = "#1a0e08"; rr(g, 70, 24, 40, 14, 3); g.fill(); g.fillStyle = unlocked ? "#7dff9a" : "#ff6a7a"; g.font = "bold 8px monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(unlocked ? "OPEN" : "LOCKED", 90, 31.5);
+      noiseFx(g, w, h, 6);
+    }, (g) => { g.fillStyle = "#fff"; g.beginPath(); g.arc(44, 30, 4, 0, 7); g.fill(); g.beginPath(); g.arc(44, 62, 5.5, 0, 7); g.fill(); g.fillRect(72, 26, 36, 10); }));
+  }
+  // floor guide arrows (tile coords -> direction 0=E 1=N 2=W 3=S)
+  const ARROWS = [];
+  [[4, 23, 0], [7, 23, 0], [10, 23, 0], [13, 23, 0], [16, 23, 0], [20, 20, 1], [20, 17, 1], [20, 14, 2], [17, 13, 2], [14, 13, 2], [11, 13, 2], [8, 13, 2], [5, 13, 2], [2, 11, 1], [2, 8, 1], [2, 5, 1], [4, 3, 0], [7, 3, 0], [10, 3, 0], [13, 3, 0], [16, 3, 0], [19, 3, 1]].forEach((a) => ARROWS.push(a));
+  let arrowTile = null, arrowMask = null;
+  function buildArrows() {
+    arrowTile = new Uint8Array(MW * MH); ARROWS.forEach(([x, y, d]) => (arrowTile[y * MW + x] = d + 1));
+    arrowMask = [0, 1, 2, 3].map((d) => {
+      const m = new Uint8Array(T * T);
+      for (let uy = 0; uy < T; uy++) for (let ux = 0; ux < T; ux++) {
+        let ex, ey; if (d === 0) { ex = ux; ey = uy; } else if (d === 1) { ex = T - 1 - uy; ey = ux; } else if (d === 2) { ex = T - 1 - ux; ey = T - 1 - uy; } else { ex = uy; ey = T - 1 - ux; }
+        const inS = (pad) => (ex >= 8 - pad && ex <= 27 + pad && Math.abs(ey - 24) <= 4 + pad) || (ex >= 24 - pad && ex <= 41 + pad && Math.abs(ey - 24) <= (41 + pad - ex) * 0.85);
+        m[uy * T + ux] = inS(0) ? 1 : inS(2) ? 2 : 0;
+      }
+      return m;
+    });
+  }
   /* ================= FIRST-PERSON: WORLD DATA + RENDER ================= */
   const FACE = { E: 0, W: 1, S: 2, N: 3 };
   let faceTex = null, faceDoor = null, LM = null, LMW = 0, LMH = 0, LMN = 0, tileMask = null, border = null, vShade = null;
@@ -1723,7 +1812,8 @@
   const MMS = 0.15;
   function fpWorldInit() {
     if (fpS.tex) return;
-    const tx = fpS.tex = { wall: texWall(), sconce: texSconce(), art0: texArt(0), art1: texArt(1), carpet: texCarpet(), ceil: texCeil(false), ceilL: texCeil(true), doorOpen: texDoor(0, false, true) };
+    const tx = fpS.tex = { wall: texWall(), sconce: texSconce(), art0: texArt(0), art1: texArt(1), carpet: texCarpet(), ceil: texCeil(false), ceilL: texCeil(true), doorOpen: texDoor(0, false, true), jamb: texJamb(), elevSign: texElevSign() };
+    buildArrows();
     faceTex = new Array(MW * MH * 4).fill(null); faceDoor = new Array(MW * MH * 4).fill(null);
     doors.forEach((d) => { const k = (d.y * MW + d.x) * 4 + FACE[d.face]; d.tex = texDoor(d.num, d.num % 4 === 0, false); faceTex[k] = d.tex; faceDoor[k] = d; });
     const dirs = [["E", 1, 0], ["W", -1, 0], ["S", 0, 1], ["N", 0, -1]];
@@ -1750,7 +1840,7 @@
       if (v === PLANT) fpProps.push({ kind: "plant", x: x * T + T / 2, y: y * T + T / 2 });
     }
     [[20.5, 22.15], [20.5, 12.15], [1.5, 13.85], [1.5, 2.15], [10.5, 22.15], [11, 12.15], [10, 2.15]].forEach(([x, y]) => fpProps.push({ kind: "exit", x: x * T, y: y * T }));
-    fpLights.push({ x: 19.5 * T, y: 2.3 * T, i: 0.6, r: 120 });
+    fpLights.push({ x: 19.5 * T, y: 2.3 * T, i: 0.6, r: 120 }); fpLights.push({ x: 19.5 * T, y: 1.75 * T, i: 0.5, r: 60 });
     // tile edge masks for carpet border
     tileMask = new Uint8Array(MW * MH);
     const wallish = (x, y) => { const v = gAt(x, y); return v === W || v === ELEV; };
@@ -1793,7 +1883,7 @@
       fpS.spr[type + vi] = { walk: fr, grab: outlined(120, 186, (g) => drawEscortFront(g, type, sk, 0, "grab")), shoo: outlined(120, 186, (g) => drawEscortFront(g, type, sk, 0, "shoo")) };
     }));
     ["cart", "plant", "ice", "exit", "beer", "pill"].forEach((k) => (fpS.spr[k] = propSprite(k)));
-    fpS.glowWarm = glowSprite(255, 196, 110); fpS.glowBlue = glowSprite(110, 200, 255); fpS.glowGreen = glowSprite(90, 255, 140); fpS.glowPink = glowSprite(255, 90, 160);
+    fpS.glowWarm = glowSprite(255, 196, 110); fpS.glowBlue = glowSprite(110, 200, 255); fpS.glowGreen = glowSprite(90, 255, 140); fpS.glowPink = glowSprite(255, 90, 160); fpS.glowRed = glowSprite(255, 50, 50);
     // minimap
     mmCanvas = mkC(MW * T * MMS * 2, MH * T * MMS * 2);
     const mg = mmCanvas.getContext("2d"); mg.scale(MMS * 2, MMS * 2);
@@ -1817,6 +1907,7 @@
     const proj = (IW / 2) / TANF, hor = Math.round(IH * 0.5 + fpS.bob * IH / cssH);
     fpS.hor = hor; fpS.proj = proj;
     const carpet = fpS.tex.carpet.d, c0 = fpS.tex.ceil.d, c1 = fpS.tex.ceilL.d;
+    const arrowCol = s.elevUnlocked ? 0xff7affa0 : 0xff5ad8ff, arrowK = 210 + ((Math.sin(s.t * 4) * 50) | 0);
     const fr = FOGC[0], fgc = FOGC[1], fb = FOGC[2], fogPix = 0xff000000 | (fb << 16) | (fgc << 8) | fr;
     const rx0 = ca - plx, ry0 = sa - ply, rx1 = ca + plx, ry1 = sa + ply, px = p.x, py = p.y;
     const MWT = MW * T, MHT = MH * T;
@@ -1841,6 +1932,8 @@
           if (m) { if (m & 1) de = uy; if ((m & 2) && T - uy < de) de = T - uy; if ((m & 4) && ux < de) de = ux; if ((m & 8) && T - ux < de) de = T - ux; }
           c = de < 12 ? border[de | 0] : carpet[(((uy * TEXK) | 0) & 127) * 128 + (((ux * TEXK) | 0) & 127)];
           k = L * fo >> 8;
+          const at = arrowTile[ty * MW + tx];
+          if (at) { const mv = arrowMask[at - 1][(uy | 0) * T + (ux | 0)]; if (mv === 1) { c = arrowCol; k = arrowK * fo >> 8; } else if (mv === 2) { c = 0xff140a0a; } }
         } else {
           const t = ((tx + ty) & 1) ? c0 : c1;
           c = t[(((uy * 1.3334) | 0) & 63) * 64 + (((ux * 1.3334) | 0) & 63)];
@@ -1850,7 +1943,7 @@
         buf[row + x] = 0xff000000 | ((b > 255 ? 255 : b) << 16) | ((g > 255 ? 255 : g) << 8) | (r > 255 ? 255 : r);
       }
     }
-    const elevT = texElev(elevatorOpen), fx0 = px / T, fy0 = py / T;
+    const elevT = texElevDoor(elevatorOpen, s.elevUnlocked || s.phase === "win"), callT = texCallPanel(s.elevUnlocked || s.phase === "win"), fx0 = px / T, fy0 = py / T;
     for (let x = 0; x < IW; x++) {
       const cam = 2 * x / IW - 1, rdx = ca + plx * cam, rdy = sa + ply * cam;
       let mx = Math.floor(fx0), my = Math.floor(fy0);
@@ -1862,7 +1955,15 @@
         if (sdx < sdy) { sdx += ddx; mx += stx; side = 0; } else { sdy += ddy; my += sty; side = 1; }
         v = gAt(mx, my); if (v === W || v === ELEV) break;
       }
-      const pdt = side === 0 ? sdx - ddx : sdy - ddy, pd = Math.max(0.5, pdt * T);
+      let pdt = side === 0 ? sdx - ddx : sdy - ddy, uo = -1, etex = null;
+      if (v === ELEV) {
+        if (mx === 19 && side === 1 && sty < 0) {
+          const tP = (EDY - fy0) / rdy, xp = fx0 + tP * rdx;
+          if (xp >= 19 && xp < 20) { pdt = tP; uo = xp - 19; etex = elevT; }
+          else { const bx = rdx < 0 ? 19 : 20, tS = (bx - fx0) / rdx; pdt = tS; uo = clamp((fy0 + tS * rdy - EDY) / (2 - EDY), 0, 0.999); side = 0; etex = fpS.tex.jamb; }
+        } else etex = mx === 18 ? fpS.tex.elevSign : mx === 20 ? callT : fpS.tex.jamb;
+      }
+      const pd = Math.max(0.5, pdt * T);
       zb[x] = pd;
       const hx = px + pdt * T * rdx, hy = py + pdt * T * rdy;
       let u = (side === 0 ? hy : hx) / T; u -= Math.floor(u);
@@ -1871,7 +1972,7 @@
       const face = side === 0 ? (stx < 0 ? 0 : 1) : (sty < 0 ? 2 : 3);
       const key = (my * MW + mx) * 4 + face;
       let tex = fpS.tex.wall, toff = 0;
-      if (v === ELEV) { tex = elevT; toff = (mx - 18) * 128; if (sty > 0) u = 1 - u; }
+      if (v === ELEV) { tex = etex; if (uo >= 0) u = uo; }
       else { const d = faceDoor[key]; if (d && d.open > 0.25) tex = fpS.tex.doorOpen; else if (faceTex[key]) tex = faceTex[key]; }
       const tw = tex.w, td = tex.d, tcol = toff + ((u * 128) | 0);
       const li = ((((hy - rdy * 4) / LMS) | 0) * LMW + (((hx - rdx * 4) / LMS) | 0));
@@ -1943,6 +2044,10 @@
     list.forEach((it) => (it.pr = fpProj(it.x, it.y)));
     list.sort((a, b) => b.pr.fw - a.pr.fw);
     if (hi) for (const g of sconceGlows) fpGlow(fpS.glowWarm, g.x, g.y, g.z, 46, 0.55);
+    { const un = s.elevUnlocked || s.phase === "win";
+      if (elevatorOpen > 0.04) { fpGlow(fpS.glowWarm, 19.5 * T, EDY * T + 6, 34, 150 * elevatorOpen, 0.85 * elevatorOpen); fpGlow(fpS.glowWarm, 19.5 * T, EDY * T + 30, 2, 110 * elevatorOpen, 0.6 * elevatorOpen); }
+      if (hi) { fpGlow(un ? fpS.glowGreen : fpS.glowRed, 19.8125 * T, EDY * T + 1, 84 - 22 * 84 / 128, 26 + Math.sin(s.t * 5) * 4, 0.95); fpGlow(fpS.glowGreen, 18.5 * T, 2 * T + 1, 84 - 33 * 84 / 128, 70, 0.4); fpGlow(un ? fpS.glowGreen : fpS.glowRed, 20.34 * T, 2 * T + 1, 84 - 30 * 84 / 128, 18, 0.9); }
+    }
     for (const it of list) {
       const pr = it.pr; if (pr.fw < 7) continue;
       const fa = 1 - fogAt(pr.fw) * 0.92, o = it.o;
@@ -2110,6 +2215,9 @@
     c.restore();
     const wa = Math.atan2(wp.y * T - p.y, wp.x * T - p.x), wd = Math.hypot(wp.y * T - p.y, wp.x * T - p.x) * MMS, wr = Math.min(R - 6, wd);
     c.fillStyle = "#7dff9a"; c.save(); c.translate(mx + Math.cos(wa) * wr, my + Math.sin(wa) * wr); c.rotate(wa); c.beginPath(); c.moveTo(6, 0); c.lineTo(-4, -5); c.lineTo(-4, 5); c.closePath(); c.fill(); c.restore();
+    { const ex = (19.5 * T - p.x) * MMS, ey = (1.6 * T - p.y) * MMS, ed = Math.hypot(ex, ey), k2 = ed > R - 9 ? (R - 9) / ed : 1, qx = mx + ex * k2, qy = my + ey * k2, pu = 1 + 0.2 * Math.sin(now * 6);
+      c.fillStyle = s.elevUnlocked ? "#46ff7a" : "#e3b341"; c.strokeStyle = INK; c.lineWidth = 1.5; rr(c, qx - 7 * pu, qy - 7 * pu, 14 * pu, 14 * pu, 3); c.fill(); c.stroke();
+      c.fillStyle = INK; c.font = "900 10px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("\u21C5", qx, qy + 0.5); }
     c.save(); c.translate(mx, my); c.rotate(p.ang); c.fillStyle = "#fff"; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.moveTo(8, 0); c.lineTo(-5, -5.5); c.lineTo(-2, 0); c.lineTo(-5, 5.5); c.closePath(); c.fill(); c.stroke();
     c.globalAlpha = 0.18; c.fillStyle = "#fff"; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, R, -FOVH / 2, FOVH / 2); c.closePath(); c.fill(); c.restore();
     c.strokeStyle = "#e3b341"; c.lineWidth = 2; c.beginPath(); c.arc(mx, my, R, 0, 7); c.stroke();
