@@ -26,6 +26,7 @@
         const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       }
       if (actx.state === "suspended") actx.resume();
+      decodeVoices();
       const b = actx.createBuffer(1, 1, 22050), s = actx.createBufferSource();
       s.buffer = b; s.connect(master); s.start(0);
     } catch (e) {}
@@ -62,6 +63,56 @@
     g.gain.setValueAtTime(0.3, t + L * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + L);
     o.connect(f); f.connect(g); g.connect(master); o.start(t); lfo.start(t); o.stop(t + L + 0.05); lfo.stop(t + L + 0.05);
   }
+
+  /* ================= VOICE CLIPS (generated offline TTS, ~100 KB) ================= */
+  const ESC_LINES = [["esc_sweetie", "Hey sweetie!"], ["esc_company", "Looking for company?"], ["esc_date", "Need a date, sugar?"], ["esc_handsome", "Where you goin', handsome?"], ["esc_mama", "Come give mama a hug!"], ["esc_shy", "Don't be shy, honey!"]];
+  const SHOO_LINES = [["shoo_hmph", "Hmph!"], ["shoo_rude", "Rude!"], ["shoo_rude2", "Well! Rude!"], ["shoo_hmph2", "Hmph! Fine!"]];
+  const DAVE_THROW = [["dave_lika", "You lika da sausage, eh?!"], ["dave_that", "Take that-a! That-a! That-a!"], ["dave_mamma", "Mamma mia, here comes da sausage!"]];
+  const DAVE_FIRM = ["dave_firm", "Extra firm, baby!"], DAVE_BEER = ["dave_hydra", "Ahh, hydration!"];
+  const VOICE_NAMES = [...ESC_LINES, ...SHOO_LINES, ...DAVE_THROW, DAVE_FIRM, DAVE_BEER].map((l) => l[0]);
+  const vraw = {}, vbuf = {}, vch = { esc: null, dave: null };
+  const vcd = { esc: 2.5, shoo: 0, dave: 2.0, lastEsc: "", lastDave: "" };
+  VOICE_NAMES.forEach((n) => { vraw[n] = fetch("./audio/" + n + ".mp3").then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null); });
+  let voicesDecoding = false;
+  function decodeVoices() {
+    if (voicesDecoding || !actx) return; voicesDecoding = true;
+    VOICE_NAMES.forEach((n) => vraw[n].then((ab) => { if (!ab) return; try { const pr = actx.decodeAudioData(ab, (b) => (vbuf[n] = b), () => {}); if (pr && pr.then) pr.then((b) => (vbuf[n] = b)).catch(() => {}); } catch (e) {} }));
+  }
+  function playVoice(ch, name, rate, vol, force) {
+    if (!actx || muted || !vbuf[name]) return false;
+    const cur = vch[ch];
+    if (cur && actx.currentTime < cur.end) { if (!force || (force === 2 && cur.pri === 2)) return false; try { cur.src.stop(); } catch (e) {} }
+    const src = actx.createBufferSource(), g = actx.createGain();
+    src.buffer = vbuf[name]; src.playbackRate.value = rate || 1; g.gain.value = vol || 1.4;
+    src.connect(g); g.connect(master); src.start();
+    vch[ch] = { src, pri: force === 2 ? 2 : 1, end: actx.currentTime + vbuf[name].duration / (rate || 1) };
+    window.__voiceLog = (window.__voiceLog || []).concat(name);
+    return true;
+  }
+  const pickLine = (arr, last) => { let l; for (let i = 0; i < 4; i++) { l = arr[(Math.random() * arr.length) | 0]; if (l[0] !== last) break; } return l; };
+  function escVoiceRate(e) { if (!e.vp) e.vp = e.type === "diva" ? 0.88 : e.type === "skater" ? rand(1.06, 1.14) : rand(0.94, 1.06); return e.vp; }
+  function voiceTick(dt) {
+    vcd.esc -= dt; vcd.shoo -= dt; vcd.dave -= dt;
+    const s = state; if (!s || s.phase !== "play" || vcd.esc > 0) return;
+    let best = null, bd = 1e9;
+    s.escorts.forEach((e) => { if (e.state !== "chase") return; const d = Math.hypot(e.x - s.p.x, e.y - s.p.y); if (d < bd) { bd = d; best = e; } });
+    if (!best || bd > 8 * T || bd < 1.2 * T) return;
+    const l = pickLine(ESC_LINES, vcd.lastEsc);
+    if (playVoice("esc", l[0], escVoiceRate(best), 1.3)) { vcd.lastEsc = l[0]; best.say = l[1]; best.sayT = 1.8; vcd.esc = rand(3.5, 6); }
+    else vcd.esc = 0.5;
+  }
+  function voiceShoo(e) {
+    if (vcd.shoo > 0 || Math.random() > 0.6) return;
+    const l = pickLine(SHOO_LINES, "");
+    if (playVoice("esc", l[0], escVoiceRate(e), 1.2, true)) { e.say = l[1]; e.sayT = 1.2; vcd.shoo = 1.6; vcd.esc = Math.max(vcd.esc, 1.5); }
+  }
+  function voiceDaveThrow(sup) {
+    if (vcd.dave > 0 || Math.random() > 0.45) return;
+    const l = pickLine(DAVE_THROW, vcd.lastDave);
+    if (playVoice("dave", l[0], 1, 1.5)) { vcd.lastDave = l[0]; vcd.dave = rand(5, 8); state.daveSay = l[1]; state.daveSayT = 1.9; }
+  }
+  function voiceDave(line) { if (playVoice("dave", line[0], 1, 1.6, 2)) { vcd.dave = 4; state.daveSay = line[1]; state.daveSayT = 1.8; } }
+
   const sfx = {
     tap: () => tone(660, 0.08, "triangle", 0.15, 880),
     throw: () => { noise(0.12, 0.12, 900, 1.5, 0, 2600); tone(320, 0.08, "triangle", 0.06, 520); },
@@ -446,7 +497,7 @@
     const tp = TYPES[e.type];
     burst(e.x, e.y - 24, "feather", e.type === "diva" ? 30 : 14, [tp.dress, tp.dress2, "#ffffff"], 200);
     burst(e.x, e.y - 24, "glitter", e.type === "diva" ? 30 : 12, ["#ffe28a", "#ffffff", "#ff9de2"], 260);
-    sfx.shoo(); state.shooed++;
+    sfx.shoo(); state.shooed++; voiceShoo(e);
     if (state.p.grabbedBy === e) state.p.grabbedBy = null;
     if (e.type === "diva") {
       state.boss = null; state.elevUnlocked = true; sfx.ding();
@@ -479,11 +530,13 @@
     if (!sup) { p.ammo--; if (p.ammo <= 0) startReload(); }
     p.fire = sup ? 0.13 : 0.2;
     sup ? sfx.superThrow() : sfx.throw();
+    voiceDaveThrow(sup);
   }
 
   function update(dt) {
     const s = state, p = s.p;
     s.t += dt;
+    voiceTick(dt); if (s.daveSayT > 0) s.daveSayT -= dt;
     if (s.hintT > 0) s.hintT -= dt;
     s.shake = Math.max(0, s.shake - dt * 30);
     s.superFlash = Math.max(0, s.superFlash - dt);
@@ -583,11 +636,11 @@
       if (Math.hypot(k.x - p.x, k.y - p.y) < 30) {
         s.pickups.splice(i, 1);
         if (k.type === "beer") {
-          p.hp = Math.min(100, p.hp + 35); p.beers++; sfx.beer();
+          p.hp = Math.min(100, p.hp + 35); p.beers++; sfx.beer(); voiceDave(DAVE_BEER);
           pop(p.x, p.y - 64, "GLUG GLUG", "#ffe28a", 15, 0.7); setTimeout(() => state && pop(state.p.x, state.p.y - 70, "BURP!", "#fff", 24, 1), 600);
           burst(p.x, p.y - 30, "foam", 10, ["#fffbe8", "#ffe7a3"], 120);
         } else {
-          p.superT = SUPER_TIME; s.superFlash = 0.5; sfx.pill();
+          p.superT = SUPER_TIME; s.superFlash = 0.5; sfx.pill(); voiceDave(DAVE_FIRM);
           pop(p.x, p.y - 66, "SUPER SAUSAGES! 5s", "#7fd8ff", 18, 1.3);
           burst(p.x, p.y - 30, "glitter", 18, ["#7fd8ff", "#ffffff", "#2a7fff"], 220);
         }
@@ -2041,6 +2094,13 @@
     ctx.fillStyle = t ? "#ff5d8f" : "#fff"; ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, 7); ctx.fill();
   }
   function fpHudExtras(now) {
+    if (state.daveSayT > 0 && state.daveSay) {
+      const c = ctx, a = clamp(state.daveSayT * 3, 0, 1), y = cssH * 0.66;
+      c.save(); c.globalAlpha = a; c.font = "italic 900 19px 'Avenir Next', 'Segoe UI', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+      const t = "Dave: “" + state.daveSay + "”", w = Math.min(cssW - 24, c.measureText(t).width + 26);
+      c.fillStyle = "rgba(20,6,14,.72)"; rr(c, cssW / 2 - w / 2, y - 17, w, 34, 17); c.fill(); c.strokeStyle = "#e3b341"; c.lineWidth = 2; c.stroke();
+      c.fillStyle = "#ffe28a"; c.fillText(t, cssW / 2, y + 1, cssW - 40); c.restore();
+    }
     const s = state, p = s.p, c = ctx, R = 44, mx = cssW - R - 12, my = 160;
     c.save(); c.beginPath(); c.arc(mx, my, R, 0, 7); c.fillStyle = "rgba(20,6,14,.72)"; c.fill(); c.clip();
     c.drawImage(mmCanvas, mx - p.x * MMS, my - p.y * MMS, MW * T * MMS, MH * T * MMS);

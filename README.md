@@ -13,3 +13,8 @@ The game now runs first-person by default. It uses a raycast hotel floor with ba
 
 - `?view=topdown`: the original v1 top-down version.
 - `?q=0|1|2`: forces a quality tier (render scale 0.8 / 0.6 / 0.45). Without it, the game drops a tier automatically when frames average over ~20 ms.
+
+## v3: voices + landing how-to + new win gag
+
+- The how-to-play copy now sits on the landing screen; Play goes straight into the level.
+- Voice clips in `audio/` (15 short mono MP3s, ~100 KB total) were generated offline on the build box with the open-source Kokoro-82M TTS model (Apache-2.0). No accounts or online TTS services were used. They're decoded with WebAudio after the first tap (iOS unlock), follow the HUD mute toggle and have cooldowns so they don't spam.
