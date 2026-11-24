@@ -28,13 +28,27 @@
 
     <section id="screen-landing" class="screen card-screen" data-screen="landing" hidden>
       <div class="card landing-card">
-        <p class="sample-badge" id="sample-badge" hidden>Sample invite</p>
-        <img class="crest" src="./assets/stag-badge.svg" alt="" width="160" height="160" />
-        <p class="kicker" id="landing-kicker">You're Invited to Play</p>
+        <div class="land-top">
+          <img class="crest" src="./assets/stag-badge.svg" alt="" width="64" height="64" />
+          <div>
+            <p class="sample-badge" id="sample-badge" hidden>Sample invite</p>
+            <p class="kicker" id="landing-kicker">You're Invited to Play</p>
+          </div>
+        </div>
         <h1 id="landing-line">The Best Man is sending you an invite. Pass the level to find out what it is!</h1>
-        <p class="subline" id="landing-subline">Fair warning: this level fights back.</p>
-        <button type="button" class="btn primary" id="btn-begin">Open the game</button>
-        <p class="trust">No ads. No tracking. Play the short level to open the invite.</p>
+        <p class="goal-line">&#x1F32D; Fight off the escorts looking for love by throwing your sausage at them!</p>
+        <ul class="tips" aria-label="How to play">
+          <li><span class="ti">&#x1F44D;</span><span><b>Left thumb</b> walks. Like you're sober.</span></li>
+          <li><span class="ti">&#x1F449;</span><span><b>Drag right</b> to look. <b>THROW</b> launches sausage.</span></li>
+          <li><span class="ti">&#x1F6D7;</span><span><b>Goal:</b> get down Floor 7 to the elevator before they get you.</span></li>
+          <li><span class="ti">&#x1F37A;</span><span><b>Beer</b> = health. Hydration, technically.</span></li>
+          <li><span class="ti">&#x1F48A;</span><span><b>Blue pill</b> = 5 seconds of extra-firm super sausage.</span></li>
+          <li><span class="ti">&#x1F49C;</span><span><b>Purple clingers</b> hug you and drain health. Shake 'em off.</span></li>
+          <li><span class="ti">&#x1F451;</span><span><b>The Diva</b> guards the elevator. She won't take no.</span></li>
+          <li><span class="ti">&#x1F3F3;&#xFE0F;</span><span><b>Caught 3 times?</b> Easy mode, or skip to the invite. For the weak.</span></li>
+        </ul>
+        <button type="button" class="btn primary" id="btn-begin">Play &#x1F32D;</button>
+        <p class="trust">On a computer: WASD + mouse, click to throw. No ads, no tracking.</p>
       </div>
       <footer class="madeby"></footer>
     </section>
